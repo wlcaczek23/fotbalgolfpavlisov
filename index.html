@@ -34,15 +34,7 @@ canvas{display:block;touch-action:none;}
 .btn-share{background:linear-gradient(135deg,#1da1f2,#0d6efd);color:#fff;border:none;padding:11px 28px;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:2px;cursor:pointer;box-shadow:0 4px 18px rgba(29,161,242,0.4);display:flex;align-items:center;gap:8px;}
 .btn-share:active{transform:scale(0.96);}
 .site{color:#2a4a2a;font-size:0.63rem;letter-spacing:1px;}
-#share-panel{display:none;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:340px;}
-#share-preview{width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.5);border:2px solid #2a4a2a;}
-.share-btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:100%;}
-.sbtn{border:none;border-radius:10px;padding:10px 16px;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:2px;cursor:pointer;display:flex;align-items:center;gap:6px;text-decoration:none;color:#fff;}
-.sbtn:active{transform:scale(0.96);}
-.sbtn-save{background:linear-gradient(135deg,#7ee87e,#3aaa3a);color:#0a1a0a;}
-.sbtn-wa{background:#25d366;}
-.sbtn-ig{background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);}
-.sbtn-fb{background:#1877f2;}
+
 </style>
 </head>
 <body>
@@ -1018,251 +1010,188 @@ function showEnd(){
     <div class="verdict" style="color:${vc}">${v}</div>
     <p style="color:#ccc;font-size:.8rem">Celkem <b>${tot}</b> úderů | Par ${par} | Skóre ${diff>=0?'+':''}${diff}</p>
     <div class="scorebox">${rows}</div>
-    <p style="color:#5a9a5a;font-size:.68rem;text-align:center">Přijď zahrát naživo!<br>🌿 Sportpark Pavlišov</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
       <button class="btn" id="startBtn">HRÁT ZNOVU</button>
-      <button class="btn-share" id="shareBtn">📸 SDÍLET VÝSLEDEK</button>
-    </div>
-    <div id="share-panel">
-      <img id="share-preview" alt="výsledková karta"/>
-      <div class="share-btns">
-        <a id="sbtn-save" class="sbtn sbtn-save" download="fotbalgolf-vysledek.png">💾 ULOŽIT FOTO</a>
-        <a id="sbtn-wa"   class="sbtn sbtn-wa"   target="_blank" rel="noopener">💬 WHATSAPP</a>
-        <a id="sbtn-ig"   class="sbtn sbtn-ig"   target="_blank" rel="noopener">📸 IG STORY</a>
-        <a id="sbtn-fb"   class="sbtn sbtn-fb"   target="_blank" rel="noopener">📘 FB STORY</a>
-      </div>
-      <p style="color:#3a6a3a;font-size:0.6rem;text-align:center;margin:0">Ulož foto → otevři IG/FB → Nová story → nahraj z galerie</p>
+      <button class="btn-share" id="shareBtn">📸 SDÍLET</button>
     </div>
     <div class="site">fotbalgolfpavlisov.cz</div>`;
   ov.style.display='flex';
   document.getElementById('startBtn').addEventListener('click',startGame);
-  document.getElementById('shareBtn').addEventListener('click',()=>showSharePanel(tot,diff,v));
+  document.getElementById('shareBtn').addEventListener('click',()=>doShare(tot,diff,v));
 }
 
 // ═══════════════════════════════════════════════════════
-//  SHARE IMAGE GENERATOR & PANEL
+//  SHARE IMAGE GENERATOR
 // ═══════════════════════════════════════════════════════
 function createShareImage(tot, diff, verdict){
-  // Formát 9:16 pro story (1080x1920 → škálujeme na 540x960)
-  const CW=540, CH=960;
-  const sc=document.createElement('canvas');
-  sc.width=CW; sc.height=CH;
-  const cx=sc.getContext('2d');
+  // Čtvercový formát 1080x1080 – perfektní pro IG feed i story thumbnail
+  const S = 1080;
+  const sc = document.createElement('canvas');
+  sc.width = S; sc.height = S;
+  const cx = sc.getContext('2d');
 
-  // ── Pozadí – tmavý gradient ──
-  const bg=cx.createLinearGradient(0,0,0,CH);
-  bg.addColorStop(0,'#061206');
-  bg.addColorStop(0.5,'#0d2a0d');
-  bg.addColorStop(1,'#061206');
-  cx.fillStyle=bg; cx.fillRect(0,0,CW,CH);
+  // ── Pozadí ──
+  const bg = cx.createLinearGradient(0,0,0,S);
+  bg.addColorStop(0,'#081408');
+  bg.addColorStop(1,'#0d2a0d');
+  cx.fillStyle = bg;
+  cx.fillRect(0,0,S,S);
 
-  // ── Dekorativní šestiúhelníkové kolečka (travní vzor) ──
-  cx.globalAlpha=0.04;
-  cx.fillStyle='#7ee87e';
-  for(let row=0;row<20;row++){
-    for(let col=0;col<8;col++){
-      const ox=col%2===0?0:35;
-      cx.beginPath();
-      cx.arc(col*70+ox, row*70-20, 28, 0, Math.PI*2);
-      cx.fill();
-    }
+  // ── Jemný travní vzor ──
+  cx.globalAlpha = 0.035;
+  cx.fillStyle = '#7ee87e';
+  for(let r=0;r<16;r++) for(let c=0;c<16;c++){
+    cx.beginPath();
+    cx.arc(c*72+(r%2)*36, r*72, 26, 0, Math.PI*2);
+    cx.fill();
   }
-  cx.globalAlpha=1;
+  cx.globalAlpha = 1;
 
-  // ── Zelený pás nahoře ──
-  const topH=180;
-  const grass=cx.createLinearGradient(0,0,0,topH);
-  grass.addColorStop(0,'#1a5a1a');
-  grass.addColorStop(1,'#0d2a0d');
-  cx.fillStyle=grass;
-  cx.beginPath();
-  cx.moveTo(0,0); cx.lineTo(CW,0); cx.lineTo(CW,topH-30);
-  cx.quadraticCurveTo(CW/2, topH+10, 0, topH-30);
-  cx.closePath(); cx.fill();
+  // ── Zelený rám (border) ──
+  const bw = 18;
+  const bGrad = cx.createLinearGradient(0,0,S,S);
+  bGrad.addColorStop(0,'#3aaa3a');
+  bGrad.addColorStop(1,'#1a6a1a');
+  cx.strokeStyle = bGrad;
+  cx.lineWidth = bw;
+  cx.strokeRect(bw/2, bw/2, S-bw, S-bw);
 
-  // ── Zelený pás dole ──
-  const botY=CH-160;
-  const grassB=cx.createLinearGradient(0,botY,0,CH);
-  grassB.addColorStop(0,'#0d2a0d');
-  grassB.addColorStop(1,'#1a5a1a');
-  cx.fillStyle=grassB;
-  cx.beginPath();
-  cx.moveTo(0,botY+30); cx.quadraticCurveTo(CW/2,botY-10,CW,botY+30);
-  cx.lineTo(CW,CH); cx.lineTo(0,CH); cx.closePath(); cx.fill();
+  // ── Logo nahoře ──
+  cx.textAlign = 'center';
+  cx.font = 'bold 42px sans-serif';
+  cx.fillStyle = '#7ee87e';
+  cx.fillText('⚽ FOTBALGOLF ⚽', S/2, 80);
+  cx.font = 'bold 22px sans-serif';
+  cx.fillStyle = 'rgba(90,180,90,0.8)';
+  cx.fillText('SPORTPARK PAVLIŠOV', S/2, 118);
 
-  // ── Logo ──
-  cx.textAlign='center';
-  cx.font='bold 28px "Nunito", sans-serif';
-  cx.fillStyle='rgba(126,232,126,0.7)';
-  cx.fillText('⚽  FOTBALGOLF  ⚽', CW/2, 55);
-  cx.font='bold 16px "Nunito", sans-serif';
-  cx.fillStyle='rgba(90,154,90,0.8)';
-  cx.fillText('SPORTPARK PAVLIŠOV', CW/2, 82);
+  // ── Dělicí linka ──
+  cx.strokeStyle = 'rgba(126,232,126,0.3)';
+  cx.lineWidth = 1.5;
+  cx.beginPath(); cx.moveTo(80,140); cx.lineTo(S-80,140); cx.stroke();
 
-  // ── Tenká linka ──
-  cx.strokeStyle='rgba(126,232,126,0.25)';
-  cx.lineWidth=1;
-  cx.beginPath(); cx.moveTo(60,100); cx.lineTo(CW-60,100); cx.stroke();
-
-  // ── "Zahrál jsem" label ──
-  cx.font='bold 20px "Nunito", sans-serif';
-  cx.fillStyle='rgba(255,255,255,0.55)';
-  cx.fillText('ZAHRÁL JSEM', CW/2, 148);
+  // ── "ZAHRÁL JSEM" ──
+  cx.font = 'bold 32px sans-serif';
+  cx.fillStyle = 'rgba(255,255,255,0.45)';
+  cx.fillText('ZAHRÁL JSEM', S/2, 200);
 
   // ── Verdict ──
-  const verdColor=diff<=-4?'#ffd700':diff<=0?'#7ee87e':diff<=4?'#cccccc':'#ff9966';
-  cx.font='bold 48px "Bebas Neue", Impact, sans-serif';
-  cx.fillStyle=verdColor;
-  cx.shadowColor=verdColor; cx.shadowBlur=30;
-  cx.fillText(verdict, CW/2, 200);
-  cx.shadowBlur=0;
+  const verdColor = diff<=-4?'#ffd700':diff<=0?'#7ee87e':diff<=4?'#bbbbbb':'#ff8855';
+  cx.font = 'bold 72px sans-serif';
+  cx.fillStyle = verdColor;
+  cx.shadowColor = verdColor; cx.shadowBlur = 30;
+  cx.fillText(verdict, S/2, 285);
+  cx.shadowBlur = 0;
 
-  // ── Velká čísla skóre ──
-  const scoreStr=diff>0?'+'+diff:String(diff);
-  const scoreColor=diff<0?'#7ee87e':diff===0?'#ffffff':'#ff6666';
+  // ── Velké skóre ──
+  const scoreStr = diff>0?'+'+diff : String(diff);
+  const scoreColor = diff<0?'#7ee87e':diff===0?'#ffffff':'#ff6655';
 
-  // Kruh za skóre
-  const circR=130;
-  const circGrad=cx.createRadialGradient(CW/2,360,0,CW/2,360,circR);
-  circGrad.addColorStop(0,'rgba(42,90,42,0.5)');
-  circGrad.addColorStop(1,'rgba(13,42,13,0)');
-  cx.fillStyle=circGrad;
-  cx.beginPath(); cx.arc(CW/2,360,circR,0,Math.PI*2); cx.fill();
+  // Kruh za číslem
+  const cg = cx.createRadialGradient(S/2,430,0,S/2,430,200);
+  cg.addColorStop(0,'rgba(42,120,42,0.4)');
+  cg.addColorStop(1,'rgba(0,0,0,0)');
+  cx.fillStyle = cg;
+  cx.beginPath(); cx.arc(S/2,430,200,0,Math.PI*2); cx.fill();
 
-  cx.font='bold 150px "Bebas Neue", Impact, sans-serif';
-  cx.fillStyle=scoreColor;
-  cx.shadowColor=scoreColor; cx.shadowBlur=40;
-  cx.fillText(scoreStr, CW/2, 420);
-  cx.shadowBlur=0;
-  cx.font='bold 18px "Nunito", sans-serif';
-  cx.fillStyle='rgba(255,255,255,0.45)';
-  cx.fillText('SKÓRE', CW/2, 448);
+  cx.font = 'bold 260px sans-serif';
+  cx.fillStyle = scoreColor;
+  cx.shadowColor = scoreColor; cx.shadowBlur = 50;
+  cx.fillText(scoreStr, S/2, 540);
+  cx.shadowBlur = 0;
+
+  cx.font = 'bold 28px sans-serif';
+  cx.fillStyle = 'rgba(255,255,255,0.4)';
+  cx.fillText('SKÓRE', S/2, 585);
+
+  // ── Dělicí linka ──
+  cx.strokeStyle = 'rgba(126,232,126,0.25)';
+  cx.lineWidth = 1.5;
+  cx.beginPath(); cx.moveTo(80,610); cx.lineTo(S-610,610); cx.stroke();
 
   // ── 3 stat boxy ──
-  const stats=[
-    {l:'ÚDERŮ',v:String(tot)},
+  const stats = [
+    {l:'ÚDERŮ', v:String(tot)},
     {l:'PAR',   v:String(HOLE_DEFS.length*3)},
     {l:'JAMEK', v:String(HOLE_DEFS.length)},
   ];
-  const bw=140, bh=80, bgap=12;
-  const bTotalW=stats.length*(bw+bgap)-bgap;
-  const bx0=(CW-bTotalW)/2;
+  const bw2=250, bh=110, bgap=30;
+  const totalW = stats.length*(bw2+bgap)-bgap;
+  const bx0 = (S-totalW)/2;
   stats.forEach((s,i)=>{
-    const bx=bx0+i*(bw+bgap), by=490;
+    const bx=bx0+i*(bw2+bgap), by=630;
     const bbg=cx.createLinearGradient(bx,by,bx,by+bh);
-    bbg.addColorStop(0,'rgba(42,90,42,0.55)');
-    bbg.addColorStop(1,'rgba(13,42,13,0.55)');
+    bbg.addColorStop(0,'rgba(42,90,42,0.6)');
+    bbg.addColorStop(1,'rgba(13,40,13,0.6)');
     cx.fillStyle=bbg;
-    cx.beginPath(); cx.roundRect(bx,by,bw,bh,12); cx.fill();
-    cx.strokeStyle='rgba(126,232,126,0.2)'; cx.lineWidth=1; cx.stroke();
-    cx.font='bold 11px "Nunito", sans-serif';
-    cx.fillStyle='rgba(255,255,255,0.45)';
-    cx.fillText(s.l, bx+bw/2, by+20);
-    cx.font='bold 38px "Bebas Neue", Impact, sans-serif';
+    cx.beginPath(); cx.roundRect(bx,by,bw2,bh,16); cx.fill();
+    cx.strokeStyle='rgba(126,232,126,0.2)'; cx.lineWidth=1.5; cx.stroke();
+    cx.font='bold 20px sans-serif';
+    cx.fillStyle='rgba(255,255,255,0.4)';
+    cx.fillText(s.l, bx+bw2/2, by+30);
+    cx.font='bold 56px sans-serif';
     cx.fillStyle='#7ee87e';
-    cx.fillText(s.v, bx+bw/2, by+62);
+    cx.fillText(s.v, bx+bw2/2, by+90);
   });
 
-  // ── Datum ──
-  const now=new Date();
-  const d=now.toLocaleDateString('cs-CZ',{day:'2-digit',month:'2-digit',year:'numeric'});
-  cx.font='13px "Nunito", sans-serif';
-  cx.fillStyle='rgba(255,255,255,0.3)';
-  cx.fillText(d, CW/2, 598);
-
-  // ── Fotbalgolf ikonka (míč) uprostřed ──
-  cx.font='64px serif';
-  cx.fillStyle='#fff';
-  cx.globalAlpha=0.12;
-  cx.fillText('⛳', CW/2, 720);
-  cx.globalAlpha=1;
-
-  // ── CTA ──
-  cx.font='bold 22px "Nunito", sans-serif';
-  cx.fillStyle='rgba(255,255,255,0.75)';
-  cx.fillText('Dokážeš mě porazit?', CW/2, 790);
-  cx.font='bold 16px "Nunito", sans-serif';
-  cx.fillStyle='rgba(255,255,255,0.5)';
-  cx.fillText('Zkus i ty hru na:', CW/2, 820);
+  // ── CTA dole ──
+  cx.font = 'bold 34px sans-serif';
+  cx.fillStyle = 'rgba(255,255,255,0.8)';
+  cx.fillText('Dokážeš mě porazit? 🏆', S/2, 810);
 
   // URL box
-  const urlBg=cx.createLinearGradient(80,838,CW-80,838);
-  urlBg.addColorStop(0,'rgba(42,106,42,0)');
-  urlBg.addColorStop(0.3,'rgba(42,106,42,0.6)');
-  urlBg.addColorStop(0.7,'rgba(42,106,42,0.6)');
-  urlBg.addColorStop(1,'rgba(42,106,42,0)');
-  cx.fillStyle=urlBg;
-  cx.beginPath(); cx.roundRect(80,838,CW-160,52,26); cx.fill();
-  cx.font='bold 22px "Bebas Neue", Impact, sans-serif';
-  cx.fillStyle='#7ee87e';
-  cx.shadowColor='#7ee87e'; cx.shadowBlur=12;
-  cx.fillText('www.fotbalgolfpavlisov.cz/hra', CW/2, 872);
-  cx.shadowBlur=0;
+  const urlBg = cx.createLinearGradient(100,830,S-100,830);
+  urlBg.addColorStop(0,'rgba(42,100,42,0)');
+  urlBg.addColorStop(0.3,'rgba(42,100,42,0.55)');
+  urlBg.addColorStop(0.7,'rgba(42,100,42,0.55)');
+  urlBg.addColorStop(1,'rgba(42,100,42,0)');
+  cx.fillStyle = urlBg;
+  cx.beginPath(); cx.roundRect(100,838,S-200,70,35); cx.fill();
 
-  // ── Spodní linka ──
-  const lineGrad=cx.createLinearGradient(0,0,CW,0);
-  lineGrad.addColorStop(0,'rgba(126,232,126,0)');
-  lineGrad.addColorStop(0.5,'rgba(126,232,126,0.6)');
-  lineGrad.addColorStop(1,'rgba(126,232,126,0)');
-  cx.strokeStyle=lineGrad; cx.lineWidth=2;
-  cx.beginPath(); cx.moveTo(0,CH-8); cx.lineTo(CW,CH-8); cx.stroke();
+  cx.font = 'bold 30px sans-serif';
+  cx.fillStyle = '#7ee87e';
+  cx.shadowColor = '#7ee87e'; cx.shadowBlur = 12;
+  cx.fillText('wlcaczek23.github.io/fotbalgolfpavlisov', S/2, 882);
+  cx.shadowBlur = 0;
+
+  // ── Datum ──
+  const d = new Date().toLocaleDateString('cs-CZ',{day:'2-digit',month:'2-digit',year:'numeric'});
+  cx.font = '22px sans-serif';
+  cx.fillStyle = 'rgba(255,255,255,0.2)';
+  cx.fillText(d, S/2, 960);
 
   return sc;
 }
 
-function showSharePanel(tot, diff, verdict){
-  // Vygeneruj obrázek
-  const sc=createShareImage(tot,diff,verdict);
-  const dataUrl=sc.toDataURL('image/png');
+async function doShare(tot, diff, verdict){
+  const btn = document.getElementById('shareBtn');
+  if(btn){ btn.textContent='⏳'; btn.disabled=true; }
 
-  // Zobraz preview
-  const panel=document.getElementById('share-panel');
-  const preview=document.getElementById('share-preview');
-  preview.src=dataUrl;
-  panel.style.display='flex';
+  const sc = createShareImage(tot, diff, verdict);
+  const scoreStr = diff>0?'+'+diff:String(diff);
+  const text = `⚽ Zahrál jsem FotbalGolf Pavlišov! Skóre: ${scoreStr}. Dokážeš mě porazit? → wlcaczek23.github.io/fotbalgolfpavlisov`;
 
-  // Skrýt tlačítko sdílet (panel ho nahrazuje)
-  const shareBtn=document.getElementById('shareBtn');
-  if(shareBtn) shareBtn.style.display='none';
-
-  // Nastavit Save link
-  document.getElementById('sbtn-save').href=dataUrl;
-
-  // WhatsApp text
-  const scoreStr=diff>0?'+'+diff:String(diff);
-  const waText=`⚽ Zahrál jsem FotbalGolf Pavlišov! Skóre: ${scoreStr} (${tot} úderů). Dokážeš mě porazit? → www.fotbalgolfpavlisov.cz/hra`;
-  document.getElementById('sbtn-wa').href='https://wa.me/?text='+encodeURIComponent(waText);
-
-  // Instagram Story – otevře IG (na mobilu), uživatel přidá foto z galerie
-  document.getElementById('sbtn-ig').href='instagram://story-camera';
-  document.getElementById('sbtn-ig').addEventListener('click', function(){
-    // Zkusit nativní share s file (moderní mobily)
-    sc.toBlob(async blob=>{
-      const file=new File([blob],'fotbalgolf.png',{type:'image/png'});
-      if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-        try{ await navigator.share({files:[file], title:'FotbalGolf výsledek'}); return; }catch(e){}
-      }
-      // Fallback: stáhnout a otevřít IG
-      const a=document.createElement('a');
-      a.href=dataUrl; a.download='fotbalgolf-vysledek.png'; a.click();
-      setTimeout(()=>{ window.location.href='instagram://story-camera'; },800);
-    },'image/png');
-  },{once:true});
-
-  // Facebook Story
-  document.getElementById('sbtn-fb').href='fb://composer/';
-  document.getElementById('sbtn-fb').addEventListener('click', function(){
-    sc.toBlob(async blob=>{
-      const file=new File([blob],'fotbalgolf.png',{type:'image/png'});
-      if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-        try{ await navigator.share({files:[file], title:'FotbalGolf výsledek'}); return; }catch(e){}
-      }
-      const a=document.createElement('a');
-      a.href=dataUrl; a.download='fotbalgolf-vysledek.png'; a.click();
-      setTimeout(()=>{ window.open('https://www.facebook.com/','_blank'); },800);
-    },'image/png');
-  },{once:true});
+  sc.toBlob(async blob=>{
+    const file = new File([blob], 'fotbalgolf-vysledek.png', {type:'image/png'});
+    // iOS / Android nativní share sheet s obrázkem
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+      try{
+        await navigator.share({ files:[file], title:'FotbalGolf Pavlišov', text });
+        if(btn){ btn.textContent='📸 SDÍLET'; btn.disabled=false; }
+        return;
+      } catch(e){}
+    }
+    // Fallback – stáhnout PNG
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'fotbalgolf-vysledek.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    if(btn){ btn.textContent='📸 SDÍLET'; btn.disabled=false; }
+  }, 'image/png');
 }
+
 // ═══════════════════════════════════════════════════════
 //  IFRAME EMBED HELPER
 // ═══════════════════════════════════════════════════════
