@@ -1151,7 +1151,7 @@ function createShareImage(tot, diff, verdict){
   cx.font = 'bold 30px sans-serif';
   cx.fillStyle = '#7ee87e';
   cx.shadowColor = '#7ee87e'; cx.shadowBlur = 12;
-  cx.fillText('wlcaczek23.github.io/fotbalgolfpavlisov', S/2, 882);
+  cx.fillText('www.fotbalgolfpavlisov.cz', S/2, 882);
   cx.shadowBlur = 0;
 
   // ── Datum ──
@@ -1169,7 +1169,7 @@ async function doShare(tot, diff, verdict){
 
   const sc = createShareImage(tot, diff, verdict);
   const scoreStr = diff>0?'+'+diff:String(diff);
-  const text = `⚽ Zahrál jsem FotbalGolf Pavlišov! Skóre: ${scoreStr}. Dokážeš mě porazit? → wlcaczek23.github.io/fotbalgolfpavlisov`;
+  const text = `⚽ Zahrál jsem FotbalGolf Pavlišov! Skóre: ${scoreStr}. Dokážeš mě porazit? → www.fotbalgolfpavlisov.cz`;
 
   sc.toBlob(async blob=>{
     const file = new File([blob], 'fotbalgolf-vysledek.png', {type:'image/png'});
